@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Information Form</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 40px; display: flex; justify-content: center; }
+        .form-container { background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
+        h2 { color: #333; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
+        input[type="text"], textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        /* This style makes the reference code look grayed out */
+        input[readonly] { background-color: #e9ecef; color: #6c757d; cursor: not-allowed; border: 1px solid #ced4da; }
+        button { background-color: #0078d4; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px; }
+        button:hover { background-color: #005a9e; }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>Customer Feedback</h2>
+    
+    <!-- REPLACE THE ACTION URL BELOW IN PHASE 4 -->
+    <form id="customerForm" action="YOUR_POWER_AUTOMATE_URL_HERE" method="POST">
+        
+        <div class="form-group">
+            <label for="refCode">Your Reference Code (Locked)</label>
+            <!-- The 'readonly' tag below strictly prevents tampering -->
+            <input type="text" id="refCode" name="referenceCode" readonly>
+        </div>
+
+        <div class="form-group">
+            <label for="comments">Please provide your feedback:</label>
+            <textarea id="comments" name="customerFeedback" rows="5" required></textarea>
+        </div>
+
+        <button type="submit">Submit Responses</button>
+    </form>
+</div>
+
+<script>
+    // This script automatically grabs the ?ref=xxxx from the web link and forces it into the grayed-out box
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    if (refCode) {
+        document.getElementById('refCode').value = refCode;
+    }
+</script>
+
+</body>
+</html>
