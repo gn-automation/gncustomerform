@@ -4,170 +4,750 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customer Information Form</title>
+
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 40px; display: flex; justify-content: center; }
-        .form-container { background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
-        h2 { color: #333; margin-bottom: 20px; text-align: center; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
-        input[type="text"], input[type=email], textarea, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* ================================
+           LOADING SCREEN
+           ================================ */
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-container {
+            text-align: center;
+            background: #ffffff;
+            padding: 35px 45px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+            min-width: 260px;
+        }
+
+        .hourglass {
+            font-size: 50px;
+            margin-bottom: 15px;
+            animation: hourglassAnimation 1.5s infinite;
+        }
+
+        @keyframes hourglassAnimation {
+            0% {
+                transform: rotate(0deg);
+            }
+            50% {
+                transform: rotate(180deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .loading-text {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* ================================
+           FORM
+           ================================ */
+        .form-container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            display: none;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type=email],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
         /* Style for locked, uneditable fields */
-        input[readonly] { background-color: #e9ecef; color: #6c757d; cursor: not-allowed; border: 1px solid #ced4da; }
-        button { background-color: #0078d4; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px; }
-        button:hover { background-color: #005a9e; }
-        #message { margin-top: 15px; font-weight: bold; text-align: center; }
+        input[readonly] {
+            background-color: #e9ecef;
+            color: #6c757d;
+            cursor: not-allowed;
+            border: 1px solid #ced4da;
+        }
+
+        button {
+            background-color: #0078d4;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #005a9e;
+        }
+
+        button:disabled {
+            background-color: #999;
+            cursor: not-allowed;
+        }
+
+        #message {
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* ================================
+           ERROR SCREEN
+           ================================ */
+        #errorScreen {
+            display: none;
+            text-align: center;
+            background: #ffffff;
+            padding: 35px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+            max-width: 450px;
+        }
+
+        .error-icon {
+            font-size: 45px;
+            margin-bottom: 15px;
+        }
+
+        .error-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #c00000;
+            margin-bottom: 10px;
+        }
+
+        .error-text {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.5;
+        }
     </style>
 </head>
+
 <body>
 
-<div class="form-container">
-    <h2>Customer Feedback</h2>
-    
-    <form id="customerForm">
-        <!-- LOCKED FIELD 1 -->
-        <div class="form-group">
-            <label for="ReferenceCode">Reference Code</label>
-            <input type="text" id="ReferenceCode" readonly>
+    <!-- ==========================================
+         LOADING SCREEN
+         ========================================== -->
+    <div id="loadingScreen">
+        <div class="loading-container">
+
+            <div class="hourglass">⌛</div>
+
+            <div class="loading-title">
+                Loading your information
+            </div>
+
+            <div class="loading-text">
+                Please wait a moment...
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- ==========================================
+         ERROR SCREEN
+         ========================================== -->
+    <div id="errorScreen">
+
+        <div class="error-icon">⚠️</div>
+
+        <div class="error-title">
+            Unable to load your information
         </div>
 
-        <!-- LOCKED FIELD 2 -->
-        <div class="form-group">
-            <label for="custName">Customer Name</label>
-            <input type="text" id="custName" readonly>
+        <div class="error-text">
+            We could not retrieve your customer information.
+            <br><br>
+            Please check your link and try again.
         </div>
 
-        <!-- EDITABLE FIELD 1 -->
-        <div class="form-group">
-            <label for="custemail">Please provide your email:</label>
-            <input type="email" id="custemail" name="custemail" required>
-        </div>
+    </div>
 
-        <!-- Tax Identification Number (TIN) -->
-        <div class="form-group">
-            <label for="tin">Tax Identification Number (TIN):</label>
-            <input type="text" id="tin" name="tin" pattern="[0-9]{10}" title="TIN must contain 10 digits" required >
-        </div>
 
-        <!-- VAT Tax Registration Number (TRN) -->
-        <div class="form-group">
-            <label for="trn">VAT Tax Registration Number (TRN):</label>
-            <input
-            type="text" id="trn" name="trn" pattern="[0-9]{15}" title="TRN must contain 15 digits" required>
-        </div>
+    <!-- ==========================================
+         CUSTOMER FORM
+         ========================================== -->
+    <div class="form-container" id="formContainer">
 
-        <!-- EDITABLE FIELD 1: DROPDOWN -->
-        <div class="form-group">
-        <label for="emirate">Emirate</label>
-        <select id="emirate" name="emirate" required>
-        <option value="">-- Select an Emirate --</option>
-        <option value="Abu Dhabi">Abu Dhabi</option>
-        <option value="Dubai">Dubai</option>
-        <option value="Sharjah">Sharjah</option>
-        <option value="Ajman">Ajman</option>
-        <option value="Umm Al Quwain">Umm Al Quwain</option>
-        <option value="Ras Al Khaimah">Ras Al Khaimah</option>
-        <option value="Fujairah">Fujairah</option>
-        </select>
-        </div>
+        <h2>Customer Feedback</h2>
 
-        <button type="submit" id="submitBtn">Submit Responses</button>
-    </form>
-    <div id="message"></div>
-</div>
+        <form id="customerForm">
 
-<script>
-    // 1. Automatically grab multiple parameters from the link (?ref=...&name=...&prod=...)
-    const urlParams = new URLSearchParams(window.location.search);
+            <!-- LOCKED FIELD 1 -->
+            <div class="form-group">
+                <label for="ReferenceCode">
+                    Reference Code
+                </label>
 
-    
-    const ReferenceCode = urlParams.get('ref');
-    const lookupFlowUrl = "https://default2aff9a6f941d427ebc3e6b8404db8d.2d.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/29/workflows/4e8e1b92cf514852961ad5198594bfae/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=w0aeVQBZY4I_cF5R-YT5JAQen9_c7zNvoYNhlISiCiA";
-    const custName = urlParams.get('name');
-    // const prodName = urlParams.get('prod');
+                <input
+                    type="text"
+                    id="ReferenceCode"
+                    readonly
+                >
+            </div>
 
-    if (ReferenceCode)  document.getElementById('ReferenceCode').value = ReferenceCode;
-    if (custName) document.getElementById('custName').value = decodeURIComponent(custName);
-    if (ReferenceCode) {
 
-    fetch(lookupFlowUrl, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            referenceCode: ReferenceCode
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
+            <!-- LOCKED FIELD 2 -->
+            <div class="form-group">
+                <label for="custName">
+                    Customer Name
+                </label>
 
-        document.getElementById('custName').value = data.customerName || "";
-        document.getElementById('custemail').value = data.customerEmail || "";
-        document.getElementById('tin').value = data.tin || "";
-        document.getElementById('trn').value = data.trn || "";
-        document.getElementById('emirate').value = data.emirate || "";
+                <input
+                    type="text"
+                    id="custName"
+                    readonly
+                >
+            </div>
 
-    })
-    .catch(error => {
-        console.error("Lookup Error:", error);
-    });
 
-}
+            <!-- EDITABLE FIELD 1 -->
+            <div class="form-group">
+                <label for="custemail">
+                    Please provide your email:
+                </label>
 
-    // if (prodName) document.getElementById('prodName').value = decodeURIComponent(prodName);
+                <input
+                    type="email"
+                    id="custemail"
+                    name="custemail"
+                    required
+                >
+            </div>
 
-    // 2. Intercept and pack into JSON for Power Automate
-    document.getElementById('customerForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const submitBtn = document.getElementById('submitBtn');
-        const messageDiv = document.getElementById('message');
-        
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Submitting...";
-        
-        // PASTE YOUR EXACT LONG POWER AUTOMATE URL BETWEEN THE QUOTES BELOW
-        const flowUrl = "https://default2aff9a6f941d427ebc3e6b8404db8d.2d.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/26/workflows/64cb3b7ca0e84c91be751ca176869c19/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H6YVvurcmnBRUPZi4Zy-DWBEZLQr8XobfeJcP_v6_zU";
-        
-        const formData = {
-            referenceCode: document.getElementById('ReferenceCode').value,
-            customerName: document.getElementById('custName').value,
-            customerEmail: document.getElementById('custemail').value,
-            tin: document.getElementById('tin').value,
-            trn: document.getElementById('trn').value,
-            emirate: document.getElementById('emirate').value,
-            submittedOn: new Date().toISOString()
-        };
 
-        fetch(flowUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
-        })
-        .then(response => {
-            if (response.ok) {
-                messageDiv.style.color = "green";
-                messageDiv.innerText = "Thank you! Your information has been submitted successfully.";
-                document.getElementById('customerForm').reset();
-                // Repopulate locked fields after form resets
-                if (ReferenceCode)  document.getElementById('ReferenceCode').value = ReferenceCode;
-                if (custName) document.getElementById('custName').value = decodeURIComponent(custName);
-                // if (prodName) document.getElementById('prodName').value = decodeURIComponent(prodName);
-            } else {
-                throw new Error('Submission failed');
-            }
-        })
-        .catch(error => {
-            messageDiv.style.color = "red";
-            messageDiv.innerText = "Error submitting form. Please try again.";
-            console.error(error);
-        })
-        .finally(() => {
-            submitBtn.disabled = false;
-            submitBtn.innerText = "Submit Responses";
-        });
-    });
-</script>
+            <!-- TIN -->
+            <div class="form-group">
+                <label for="tin">
+                    Tax Identification Number (TIN):
+                </label>
+
+                <input
+                    type="text"
+                    id="tin"
+                    name="tin"
+                    pattern="[0-9]{10}"
+                    title="TIN must contain 10 digits"
+                    required
+                >
+            </div>
+
+
+            <!-- TRN -->
+            <div class="form-group">
+                <label for="trn">
+                    VAT Tax Registration Number (TRN):
+                </label>
+
+                <input
+                    type="text"
+                    id="trn"
+                    name="trn"
+                    pattern="[0-9]{15}"
+                    title="TRN must contain 15 digits"
+                    required
+                >
+            </div>
+
+
+            <!-- EMIRATE -->
+            <div class="form-group">
+
+                <label for="emirate">
+                    Emirate
+                </label>
+
+                <select
+                    id="emirate"
+                    name="emirate"
+                    required
+                >
+                    <option value="">
+                        -- Select an Emirate --
+                    </option>
+
+                    <option value="Abu Dhabi">
+                        Abu Dhabi
+                    </option>
+
+                    <option value="Dubai">
+                        Dubai
+                    </option>
+
+                    <option value="Sharjah">
+                        Sharjah
+                    </option>
+
+                    <option value="Ajman">
+                        Ajman
+                    </option>
+
+                    <option value="Umm Al Quwain">
+                        Umm Al Quwain
+                    </option>
+
+                    <option value="Ras Al Khaimah">
+                        Ras Al Khaimah
+                    </option>
+
+                    <option value="Fujairah">
+                        Fujairah
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- SUBMIT -->
+            <button
+                type="submit"
+                id="submitBtn"
+            >
+                Submit Responses
+            </button>
+
+        </form>
+
+        <div id="message"></div>
+
+    </div>
+
+
+    <script>
+
+        /* =====================================================
+           1. GET REFERENCE CODE FROM URL
+           Example:
+           ?ref=TEST-12345
+           ===================================================== */
+
+        const urlParams =
+            new URLSearchParams(window.location.search);
+
+        const ReferenceCode =
+            urlParams.get('ref');
+
+        const custName =
+            urlParams.get('name');
+
+
+        /* =====================================================
+           2. POWER AUTOMATE LOOKUP URL
+           ===================================================== */
+
+        const lookupFlowUrl =
+            "https://default2aff9a6f941d427ebc3e6b8404db8d.2d.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/29/workflows/4e8e1b92cf514852961ad5198594bfae/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=w0aeVQBZY4I_cF5R-YT5JAQen9_c7zNvoYNhlISiCiA";
+
+
+        /* =====================================================
+           3. ELEMENT REFERENCES
+           ===================================================== */
+
+        const loadingScreen =
+            document.getElementById('loadingScreen');
+
+        const formContainer =
+            document.getElementById('formContainer');
+
+        const errorScreen =
+            document.getElementById('errorScreen');
+
+        const referenceCodeField =
+            document.getElementById('ReferenceCode');
+
+        const customerNameField =
+            document.getElementById('custName');
+
+        const customerEmailField =
+            document.getElementById('custemail');
+
+        const tinField =
+            document.getElementById('tin');
+
+        const trnField =
+            document.getElementById('trn');
+
+        const emirateField =
+            document.getElementById('emirate');
+
+
+        /* =====================================================
+           4. INITIAL REFERENCE CODE DISPLAY
+           ===================================================== */
+
+        if (ReferenceCode) {
+
+            referenceCodeField.value =
+                ReferenceCode;
+
+        }
+
+
+        /* =====================================================
+           5. LOOKUP CUSTOMER INFORMATION
+           ===================================================== */
+
+        if (ReferenceCode) {
+
+            fetch(lookupFlowUrl, {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    referenceCode: ReferenceCode
+                })
+
+            })
+
+            .then(response => {
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Lookup request failed: " +
+                        response.status
+                    );
+
+                }
+
+                return response.json();
+
+            })
+
+            .then(data => {
+
+                console.log(
+                    "Customer information received:",
+                    data
+                );
+
+
+                /* Populate the form */
+
+                customerNameField.value =
+                    data.customerName || "";
+
+                customerEmailField.value =
+                    data.customerEmail || "";
+
+                tinField.value =
+                    data.tin || "";
+
+                trnField.value =
+                    data.trn || "";
+
+                emirateField.value =
+                    data.emirate || "";
+
+
+                /* =================================================
+                   SHOW FORM AFTER DATA IS LOADED
+                   ================================================= */
+
+                loadingScreen.style.display =
+                    "none";
+
+                formContainer.style.display =
+                    "block";
+
+            })
+
+            .catch(error => {
+
+                console.error(
+                    "Lookup Error:",
+                    error
+                );
+
+
+                /* Hide loading */
+
+                loadingScreen.style.display =
+                    "none";
+
+
+                /* Show error */
+
+                errorScreen.style.display =
+                    "block";
+
+            });
+
+        } else {
+
+            /* =====================================================
+               NO REFERENCE CODE
+               ===================================================== */
+
+            loadingScreen.style.display =
+                "none";
+
+            errorScreen.style.display =
+                "block";
+
+        }
+
+
+        /* =====================================================
+           6. SUBMIT FORM
+           ===================================================== */
+
+        document
+            .getElementById('customerForm')
+            .addEventListener(
+                'submit',
+                function(e) {
+
+                    e.preventDefault();
+
+
+                    const submitBtn =
+                        document.getElementById(
+                            'submitBtn'
+                        );
+
+                    const messageDiv =
+                        document.getElementById(
+                            'message'
+                        );
+
+
+                    /* Disable button */
+
+                    submitBtn.disabled =
+                        true;
+
+                    submitBtn.innerText =
+                        "Submitting...";
+
+
+                    /* =================================================
+                       POWER AUTOMATE SUBMISSION URL
+
+                       IMPORTANT:
+                       Keep the working URL here.
+                       ================================================= */
+
+                    const flowUrl =
+                        "https://default2aff9a6f941d427ebc3e6b8404db8d.2d.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/26/workflows/64cb3b7ca0e84c91be751ca176869c19/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H6YVvurcmnBRUPZi4Zy-DWBEZLQr8XobfeJcP_v6_zU";
+
+
+                    /* =================================================
+                       CREATE SUBMISSION JSON
+                       ================================================= */
+
+                    const formData = {
+
+                        referenceCode:
+                            document
+                                .getElementById(
+                                    'ReferenceCode'
+                                )
+                                .value,
+
+                        customerName:
+                            document
+                                .getElementById(
+                                    'custName'
+                                )
+                                .value,
+
+                        customerEmail:
+                            document
+                                .getElementById(
+                                    'custemail'
+                                )
+                                .value,
+
+                        tin:
+                            document
+                                .getElementById(
+                                    'tin'
+                                )
+                                .value,
+
+                        trn:
+                            document
+                                .getElementById(
+                                    'trn'
+                                )
+                                .value,
+
+                        emirate:
+                            document
+                                .getElementById(
+                                    'emirate'
+                                )
+                                .value,
+
+                        submittedOn:
+                            new Date()
+                                .toISOString()
+
+                    };
+
+
+                    /* =================================================
+                       SEND TO POWER AUTOMATE
+                       ================================================= */
+
+                    fetch(flowUrl, {
+
+                        method: 'POST',
+
+                        headers: {
+                            'Content-Type':
+                                'application/json'
+                        },
+
+                        body:
+                            JSON.stringify(
+                                formData
+                            )
+
+                    })
+
+                    .then(response => {
+
+                        if (response.ok) {
+
+                            messageDiv.style.color =
+                                "green";
+
+                            messageDiv.innerText =
+                                "Thank you! Your information has been submitted successfully.";
+
+
+                            /* Reset form */
+
+                            document
+                                .getElementById(
+                                    'customerForm'
+                                )
+                                .reset();
+
+
+                            /* Restore locked fields */
+
+                            if (ReferenceCode) {
+
+                                referenceCodeField.value =
+                                    ReferenceCode;
+
+                            }
+
+                            if (custName) {
+
+                                customerNameField.value =
+                                    decodeURIComponent(
+                                        custName
+                                    );
+
+                            }
+
+                        } else {
+
+                            throw new Error(
+                                'Submission failed'
+                            );
+
+                        }
+
+                    })
+
+                    .catch(error => {
+
+                        messageDiv.style.color =
+                            "red";
+
+                        messageDiv.innerText =
+                            "Error submitting form. Please try again.";
+
+                        console.error(
+                            error
+                        );
+
+                    })
+
+                    .finally(() => {
+
+                        submitBtn.disabled =
+                            false;
+
+                        submitBtn.innerText =
+                            "Submit Responses";
+
+                    });
+
+                }
+            );
+
+    </script>
 
 </body>
 </html>
