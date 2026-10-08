@@ -7,10 +7,11 @@
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 40px; display: flex; justify-content: center; }
         .form-container { background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
-        h2 { color: #333; margin-bottom: 20px; }
+        h2 { color: #333; margin-bottom: 20px; text-align: center; }
         .form-group { margin-bottom: 15px; }
         label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
-        input[type="text"], textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        input[type="text"], input[type=email], textarea, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        /* Style for locked, uneditable fields */
         input[readonly] { background-color: #e9ecef; color: #6c757d; cursor: not-allowed; border: 1px solid #ced4da; }
         button { background-color: #0078d4; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px; }
         button:hover { background-color: #005a9e; }
@@ -23,14 +24,50 @@
     <h2>Customer Feedback</h2>
     
     <form id="customerForm">
+        <!-- LOCKED FIELD 1 -->
         <div class="form-group">
-            <label for="refCode">Your Reference Code (Locked)</label>
-            <input type="text" id="refCode" name="referenceCode" readonly>
+            <label for="ReferenceCode">Reference Code</label>
+            <input type="text" id="ReferenceCode" readonly>
         </div>
 
+        <!-- LOCKED FIELD 2 -->
         <div class="form-group">
-            <label for="comments">Please provide your feedback:</label>
-            <textarea id="comments" name="customerFeedback" rows="5" required></textarea>
+            <label for="custName">Customer Name</label>
+            <input type="text" id="custName" readonly>
+        </div>
+
+        <!-- EDITABLE FIELD 1 -->
+        <div class="form-group">
+            <label for="custemail">Please provide your email:</label>
+            <input type="email" id="custemail" name="custemail" required>
+        </div>
+
+        <!-- Tax Identification Number (TIN) -->
+        <div class="form-group">
+            <label for="tin">Tax Identification Number (TIN):</label>
+            <input type="text" id="tin" name="tin" pattern="[0-9]{10}" title="TIN must contain 10 digits" required >
+        </div>
+
+        <!-- VAT Tax Registration Number (TRN) -->
+        <div class="form-group">
+            <label for="trn">VAT Tax Registration Number (TRN):</label>
+            <input
+            type="text" id="trn" name="trn" pattern="[0-9]{15}" title="TRN must contain 15 digits" required>
+        </div>
+
+        <!-- EDITABLE FIELD 1: DROPDOWN -->
+        <div class="form-group">
+        <label for="emirate">Emirate</label>
+        <select id="emirate" name="emirate" required>
+        <option value="">-- Select an Emirate --</option>
+        <option value="Abu Dhabi">Abu Dhabi</option>
+        <option value="Dubai">Dubai</option>
+        <option value="Sharjah">Sharjah</option>
+        <option value="Ajman">Ajman</option>
+        <option value="Umm Al Quwain">Umm Al Quwain</option>
+        <option value="Ras Al Khaimah">Ras Al Khaimah</option>
+        <option value="Fujairah">Fujairah</option>
+        </select>
         </div>
 
         <button type="submit" id="submitBtn">Submit Responses</button>
@@ -39,16 +76,49 @@
 </div>
 
 <script>
-    // 1. Grab the ?ref=xxxx from the web link and force it into the grayed-out box
+    // 1. Automatically grab multiple parameters from the link (?ref=...&name=...&prod=...)
     const urlParams = new URLSearchParams(window.location.search);
-    const refCode = urlParams.get('ref');
-    if (refCode) {
-        document.getElementById('refCode').value = refCode;
-    }
 
-    // 2. Intercept submit, convert data to JSON, and send to Power Automate
+    
+    const ReferenceCode = urlParams.get('ref');
+    const lookupFlowUrl = "https://default2aff9a6f941d427ebc3e6b8404db8d.2d.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/29/workflows/4e8e1b92cf514852961ad5198594bfae/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=w0aeVQBZY4I_cF5R-YT5JAQen9_c7zNvoYNhlISiCiA";
+    const custName = urlParams.get('name');
+    // const prodName = urlParams.get('prod');
+
+    if (ReferenceCode)  document.getElementById('ReferenceCode').value = ReferenceCode;
+    if (custName) document.getElementById('custName').value = decodeURIComponent(custName);
+    if (ReferenceCode) {
+
+    fetch(lookupFlowUrl, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            referenceCode: ReferenceCode
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+
+        document.getElementById('custName').value = data.customerName || "";
+        document.getElementById('custemail').value = data.customerEmail || "";
+        document.getElementById('tin').value = data.tin || "";
+        document.getElementById('trn').value = data.trn || "";
+        document.getElementById('emirate').value = data.emirate || "";
+
+    })
+    .catch(error => {
+        console.error("Lookup Error:", error);
+    });
+
+}
+
+    // if (prodName) document.getElementById('prodName').value = decodeURIComponent(prodName);
+
+    // 2. Intercept and pack into JSON for Power Automate
     document.getElementById('customerForm').addEventListener('submit', function(e) {
-        e.preventDefault(); // Stop standard form redirect
+        e.preventDefault();
         
         const submitBtn = document.getElementById('submitBtn');
         const messageDiv = document.getElementById('message');
@@ -57,26 +127,32 @@
         submitBtn.innerText = "Submitting...";
         
         // PASTE YOUR EXACT LONG POWER AUTOMATE URL BETWEEN THE QUOTES BELOW
-        const flowUrl = "https://default2aff9a6f941d427ebc3e6b8404db8d.2d.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/26/workflows/64cb3b7ca0e84c91be751ca176869c19/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H6YVvurcmnBRUPZi4Zy-DWBEZLQr8XobfeJcP_v6_zU"; 
+        const flowUrl = "https://default2aff9a6f941d427ebc3e6b8404db8d.2d.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/26/workflows/64cb3b7ca0e84c91be751ca176869c19/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H6YVvurcmnBRUPZi4Zy-DWBEZLQr8XobfeJcP_v6_z";
         
         const formData = {
-            referenceCode: document.getElementById('refCode').value,
-            customerFeedback: document.getElementById('comments').value
+            referenceCode: document.getElementById('ReferenceCode').value,
+            customerName: document.getElementById('custName').value,
+            customerEmail: document.getElementById('custemail').value,
+            tin: document.getElementById('tin').value,
+            trn: document.getElementById('trn').value,
+            emirate: document.getElementById('emirate').value,
+            submittedOn: new Date().toISOString()
         };
 
         fetch(flowUrl, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
         })
         .then(response => {
             if (response.ok) {
                 messageDiv.style.color = "green";
-                messageDiv.innerText = "Thank you! Your feedback has been recorded successfully.";
+                messageDiv.innerText = "Thank you! Your information has been submitted successfully.";
                 document.getElementById('customerForm').reset();
-                if (refCode) document.getElementById('refCode').value = refCode; // keep code visible
+                // Repopulate locked fields after form resets
+                if (ReferenceCode)  document.getElementById('ReferenceCode').value = ReferenceCode;
+                if (custName) document.getElementById('custName').value = decodeURIComponent(custName);
+                // if (prodName) document.getElementById('prodName').value = decodeURIComponent(prodName);
             } else {
                 throw new Error('Submission failed');
             }
