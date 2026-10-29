@@ -54,7 +54,7 @@ button{background:#0078d4;color:#fff;border:none;padding:12px;border-radius:4px;
 </form></div>
 <script>
 const lookupFlowUrl="https://default2aff9a6f941d427ebc3e6b8404db8d.2d.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/29/workflows/4e8e1b92cf514852961ad5198594bfae/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=w0aeVQBZY4I_cF5R-YT5JAQen9_c7zNvoYNhlISiCiA";
-const flowUrl="https://default2aff9a6f941d427ebc3e6b8404db8d.2d.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/26/workflows/64cb3b7ca0e84c91be751ca176869c19/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H6YVvurcmnBRUPZi4Zy-DWBEZLQr8XobfeJcP_v6_zU";
+const flowUrl="https://default2aff9a6f941d427ebc3e6b8404db8d.2d.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/26/workflows/64cb3b7ca0e84c91be751ca176869c19/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H6YVvurcmnBRUPZi4Zy-DWBEZLQr8XobfeJcP_v6_zU;"
 let cap=''; function generateCaptcha(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';cap='';for(let i=0;i<6;i++) cap+=c[Math.floor(Math.random()*c.length)];captchaCode.innerText=cap;} generateCaptcha();
 function statusMsg(m,t){status.className='status '+t;status.style.display='block';status.innerText=m;}
 function err(id,m){let e=document.getElementById(id+'Error'); if(e){e.style.display='block';e.innerText=m;document.getElementById(id).classList.add('invalid');}}
