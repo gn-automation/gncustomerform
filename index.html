@@ -1,68 +1,428 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gulf News e‑Invoicing Information</title>
+<title>Gulf News e-Invoicing Information</title>
+
 <style>
-body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:40px;display:flex;justify-content:center}
-.form-container{background:#fff;padding:30px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.1);width:100%;max-width:850px;display:none}
-.form-group{margin-bottom:14px}.row{display:grid;grid-template-columns:1fr 1fr;gap:15px}
-label{font-weight:bold;display:block;margin-bottom:4px}.help{font-size:12px;color:#6c757d;font-style:italic;margin-bottom:5px}
-input,select{width:100%;padding:10px;box-sizing:border-box;border:1px solid #ccc;border-radius:4px}
-input[readonly]{background:#e9ecef}
-button{background:#0078d4;color:#fff;border:none;padding:12px;border-radius:4px;cursor:pointer}
-#submitBtn{width:100%}.counter{text-align:right;font-size:11px;color:#777}.error{display:none;color:#dc3545;font-size:12px}.invalid{border-color:#dc3545}
-.status{display:none;padding:12px;border-radius:4px;margin-bottom:15px}.ok{background:#d1e7dd}.bad{background:#f8d7da}.info{background:#e7f3ff}
-.captcha{display:flex;gap:10px;align-items:center}.capbox{padding:10px 14px;background:#eee;letter-spacing:4px;font-weight:bold}
-#loadingScreen{position:fixed;inset:0;background:#f4f6f9;display:flex;align-items:center;justify-content:center} 
-#errorScreen{display:none}
+  /* ---------- Base ---------- */
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+    padding: 40px 16px;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* ---------- Layout ---------- */
+  .form-container {
+    display: none; /* shown after customer data loads */
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .1);
+    width: 100%;
+    max-width: 600px;
+  }
+  /* ---------- Fields ---------- */
+  .form-group { margin-bottom: 14px; }
+  label { font-weight: bold; display: block; margin-bottom: 4px; }
+  .help { font-size: 12px; color: #6c757d; font-style: italic; margin-bottom: 5px; }
+  input, select {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  input[readonly] { background: #e9ecef; }
+  .checkbox-label { display: flex; align-items: center; gap: 8px; font-weight: normal; }
+  .checkbox-label input { width: auto; }
+  .counter { text-align: right; font-size: 11px; color: #777; }
+
+  /* ---------- Divider ---------- */
+  .divider {
+  border-top: 2px solid #9bb3e7;
+  margin-top: 24px;
+  padding-top: 20px;
+}
+
+  /* ---------- Validation ---------- */
+  .error { display: none; color: #dc3545; font-size: 12px; margin-top: 4px; }
+  .invalid { border-color: #dc3545; }
+
+  /* ---------- Status banner ---------- */
+  .status { display: none; padding: 12px; border-radius: 4px; margin-bottom: 15px; }
+  .status.ok   { background: #d1e7dd; }
+  .status.bad  { background: #f8d7da; }
+  .status.info { background: #e7f3ff; }
+
+  /* ---------- Captcha ---------- */
+  .captcha { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+  .capbox { padding: 10px 14px; background: #eee; letter-spacing: 4px; font-weight: bold; user-select: none; }
+
+  /* ---------- Buttons ---------- */
+  button {
+    background: #0078d4;
+    color: #fff;
+    border: none;
+    padding: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  button:disabled { opacity: .6; cursor: not-allowed; }
+  #submitBtn { width: 100%; }
+
+  /* ---------- Loading / error screens ---------- */
+  #loadingScreen {
+    position: fixed;
+    inset: 0;
+    background: #f4f6f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #errorScreen { display: none; }
 </style>
 </head>
+
 <body>
+
 <div id="loadingScreen">Loading customer information...</div>
 <div id="errorScreen">Unable to load customer information.</div>
+
 <div class="form-container" id="formContainer">
-<h2>Gulf News e‑Invoicing Information</h2>
-<div id="status" class="status"></div>
-<form id="customerForm">
-<div class="row">
-<div class="form-group"><label>Internal Reference *</label><input id="ReferenceCode" readonly maxlength="10"></div>
-<div class="form-group"><label>Customer Name *</label><div class='help'>Registered legal entity name.</div><input id="custName" maxlength="80"><div class='counter' id='custNameCounter'></div></div>
+  <h2>Gulf News e-Invoicing Information</h2>
+
+  <!-- NOTE: do not name this element id "status" - window.status is a built-in browser property -->
+  <div id="statusBox" class="status"></div>
+
+  <form id="customerForm" novalidate>
+
+    <div class="form-group">
+      <label for="ReferenceCode">Internal Reference *</label>
+      <input id="ReferenceCode" readonly maxlength="10">
+    </div>
+
+    <div class="form-group">
+      <label for="custName">Customer Name *</label>
+      <div class="help">Registered legal entity name.</div>
+      <input id="custName" maxlength="80">
+      <div class="counter" id="custNameCounter"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="custemail">Email *</label>
+      <input id="custemail" type="email" maxlength="50">
+    </div>
+
+    <div class="form-group">
+      <label for="contactNumber">Contact Number *</label>
+      <div class="help">Primary contact number for the company.</div>
+      <input id="contactNumber" maxlength="20">
+    </div>
+
+    <div class="form-group">
+      <label for="tin">TIN *</label>
+      <div class="help">Enter your 10-digit Tax Identification Number used for eInvoicing. The TIN can be retrieved from your FTA Emara Tax profile.</div>
+      <input id="tin" maxlength="10">
+      <div id="tinError" class="error"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="trn">TRN *</label>
+      <div class="help">Enter your 15 digit UAE VAT Registration Number. Your TRN can be found on the VAT registration certificate.</div>
+      <input id="trn" maxlength="15">
+      <div id="trnError" class="error"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="tradeLicenceNumber">Trade Licence Number</label>
+      <div class="help">Your legal registration number / identifier issued by your licensing authority in the UAE.</div>
+      <input id="tradeLicenceNumber" maxlength="30">
+    </div>
+
+    <div class="form-group">
+      <label for="tradeAuthority">Trade Licence Issuing Authority</label>
+      <div class="help">Enter the name of the Trade License issuing authority in the UAE.</div>
+      <input id="tradeAuthority" maxlength="50">
+      <div id="tradeAuthorityError" class="error"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="address1">Address Line 1 *</label>
+      <div class="help">This should be your building name, street name / number, area, po box and city. No special characters and up to 100 characters only.</div>
+      <input id="address1" maxlength="100">
+    </div>
+
+    <div class="form-group">
+      <label for="address2">Address Line 2 *</label>
+      <input id="address2" maxlength="35">
+    </div>
+
+    <div class="form-group">
+      <label for="address3">Address Line 3</label>
+      <input id="address3" maxlength="35">
+    </div>
+
+    <div class="form-group">
+      <label for="emirate">Emirate *</label>
+      <div class="help">Select the Emirate where your company is registered in.</div>
+      <select id="emirate">
+        <option value="">Select</option>
+        <option>Abu Dhabi</option>
+        <option>Dubai</option>
+        <option>Sharjah</option>
+        <option>Ajman</option>
+        <option>Umm Al Quwain</option>
+        <option>Ras Al Khaimah</option>
+        <option>Fujairah</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="freeZoneCustomer"> Free Zone Based Customer
+      </label>
+      <div class="help">Please indicate whether your company is established in a Free Zone.</div>
+    </div>
+
+    <div class="form-group divider">
+      <div class="captcha">
+        <div id="captchaCode" class="capbox"></div>
+        <button type="button" id="refreshCaptcha">Refresh</button>
+      </div>
+      <input id="captchaInput" maxlength="6" placeholder="Enter captcha">
+      <div id="captchaInputError" class="error"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="beneficiaryConfirmation">
+        I confirm that I am the beneficiary of the services provided.
+      </label>
+      <div id="beneficiaryConfirmationError" class="error"></div>
+    </div>
+
+    <button id="submitBtn" type="submit">Submit</button>
+  </form>
 </div>
-<div class="row">
-<div class="form-group"><label>Email *</label><input id="custemail" type="email" maxlength="50"></div>
-<div class="form-group"><label>Contact Number *</label><input id="contactNumber" maxlength="20"></div>
-</div>
-<div class="row">
-<div class="form-group"><label>TIN *</label><input id="tin" maxlength="10"><div id='tinError' class='error'></div></div>
-<div class="form-group"><label>TRN *</label><input id="trn" maxlength="15"><div id='trnError' class='error'></div></div>
-</div>
-<div class="row">
-<div class="form-group"><label>Trade Licence Number</label><input id="tradeLicenceNumber" maxlength="30"></div>
-<div class="form-group"><label>Trade License Issuing Authority</label><input id="tradeAuthority" maxlength="50"><div id='tradeAuthorityError' class='error'></div></div>
-</div>
-<div class="form-group"><label>Emirate *</label><select id='emirate'><option value=''>Select</option><option>Abu Dhabi</option><option>Dubai</option><option>Sharjah</option><option>Ajman</option><option>Umm Al Quwain</option><option>Ras Al Khaimah</option><option>Fujairah</option></select></div>
-<div class="form-group"><label><input style='width:auto' type='checkbox' id='freeZoneCustomer'> Free Zone Based Customer</label></div>
-<div class='form-group'><label>Address Line 1 *</label><input id='address1' maxlength='100'></div>
-<div class='form-group'><label>Address Line 2 *</label><input id='address2' maxlength='35'></div>
-<div class='form-group'><label>Address Line 3</label><input id='address3' maxlength='35'></div>
-<div class='form-group'><div class='captcha'><div id='captchaCode' class='capbox'></div><button type='button' onclick='generateCaptcha()'>Refresh</button></div><input id='captchaInput' maxlength='6' placeholder='Enter captcha'><div id='captchaInputError' class='error'></div></div>
-<div class='form-group'><label><input style='width:auto' type='checkbox' id='beneficiaryConfirmation'> I confirm that I am the beneficiary of the services provided.</label></div>
-<button id='submitBtn' type='submit'>Submit Responses</button>
-</form></div>
+
 <script>
-const lookupFlowUrl="https://default2aff9a6f941d427ebc3e6b8404db8d.2d.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/29/workflows/4e8e1b92cf514852961ad5198594bfae/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=w0aeVQBZY4I_cF5R-YT5JAQen9_c7zNvoYNhlISiCiA";
-const flowUrl="https://default2aff9a6f941d427ebc3e6b8404db8d.2d.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/26/workflows/64cb3b7ca0e84c91be751ca176869c19/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H6YVvurcmnBRUPZi4Zy-DWBEZLQr8XobfeJcP_v6_zU;"
-let cap=''; function generateCaptcha(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';cap='';for(let i=0;i<6;i++) cap+=c[Math.floor(Math.random()*c.length)];captchaCode.innerText=cap;} generateCaptcha();
-function statusMsg(m,t){status.className='status '+t;status.style.display='block';status.innerText=m;}
-function err(id,m){let e=document.getElementById(id+'Error'); if(e){e.style.display='block';e.innerText=m;document.getElementById(id).classList.add('invalid');}}
-function clearErr(){document.querySelectorAll('.error').forEach(x=>x.style.display='none');document.querySelectorAll('.invalid').forEach(x=>x.classList.remove('invalid'));}
-const ref=new URLSearchParams(location.search).get('ref'); if(ref) ReferenceCode.value=ref;
-fetch(lookupFlowUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({referenceCode:ref})}).then(r=>r.json()).then(d=>{custName.value=d.customerName||'';custemail.value=d.customerEmail||'';tin.value=d.tin||'';trn.value=d.trn||'';emirate.value=d.emirate||'';contactNumber.value=d.contactNumber||'';tradeLicenceNumber.value=d.tradeLicenceNumber||'';tradeAuthority.value=d.tradeAuthority||'';address1.value=d.address1||'';address2.value=d.address2||'';address3.value=d.address3||'';freeZoneCustomer.checked=d.freeZoneCustomer||false;loadingScreen.style.display='none';formContainer.style.display='block';statusMsg('Customer information loaded.','ok');}).catch(()=>{loadingScreen.style.display='none';errorScreen.style.display='block';});
-customerForm.addEventListener('submit',async e=>{e.preventDefault();clearErr();let ok=true;if(!/^\d{10}$/.test(tin.value)){err('tin','TIN must contain exactly 10 digits');ok=false;} if(!/^\d{15}$/.test(trn.value)){err('trn','TRN must contain exactly 15 digits');ok=false;} if(tradeLicenceNumber.value&&!tradeAuthority.value){err('tradeAuthority','Authority required');ok=false;} if(captchaInput.value.toUpperCase()!=cap){err('captchaInput','Captcha mismatch');ok=false;} if(!beneficiaryConfirmation.checked) ok=false; if(!ok){statusMsg('Please correct highlighted fields.','bad');return;} statusMsg('Submitting information...','info');
-const payload={referenceCode:ReferenceCode.value,customerName:custName.value,customerEmail:custemail.value,contactNumber:contactNumber.value,tin:tin.value,trn:trn.value,tradeLicenceNumber:tradeLicenceNumber.value,tradeAuthority:tradeAuthority.value,freeZoneCustomer:freeZoneCustomer.checked,address1:address1.value,address2:address2.value,address3:address3.value,emirate:emirate.value,beneficiaryConfirmation:beneficiaryConfirmation.checked,submittedOn:new Date().toISOString()};
-try{let r=await fetch(flowUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); if(!r.ok) throw 0; statusMsg('Thank you. Information submitted successfully.','ok'); generateCaptcha();}catch{x=statusMsg('Submission failed. Please try again.','bad');}}
-);
-</script></body></html>
+/* =========================================================
+   Configuration
+   ========================================================= */
+const LOOKUP_FLOW_URL = "https://default2aff9a6f941d427ebc3e6b8404db8d.2d.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/29/workflows/4e8e1b92cf514852961ad5198594bfae/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=w0aeVQBZY4I_cF5R-YT5JAQen9_c7zNvoYNhlISiCiA";
+const SUBMIT_FLOW_URL = "https://default2aff9a6f941d427ebc3e6b8404db8d.2d.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/26/workflows/64cb3b7ca0e84c91be751ca176869c19/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H6YVvurcmnBRUPZi4Zy-DWBEZLQr8XobfeJcP_v6_zU";
+
+/* =========================================================
+   Element references
+   ========================================================= */
+const $ = id => document.getElementById(id);
+
+const fields = {
+  ReferenceCode: $("ReferenceCode"),
+  custName: $("custName"),
+  custemail: $("custemail"),
+  contactNumber: $("contactNumber"),
+  tin: $("tin"),
+  trn: $("trn"),
+  tradeLicenceNumber: $("tradeLicenceNumber"),
+  tradeAuthority: $("tradeAuthority"),
+  emirate: $("emirate"),
+  freeZoneCustomer: $("freeZoneCustomer"),
+  address1: $("address1"),
+  address2: $("address2"),
+  address3: $("address3"),
+  captchaInput: $("captchaInput"),
+  beneficiaryConfirmation: $("beneficiaryConfirmation")
+};
+
+/* =========================================================
+   Helpers: status banner, field errors
+   ========================================================= */
+function showStatus(message, type) {
+  const box = $("statusBox");
+  box.className = "status " + type;
+  box.style.display = "block";
+  box.textContent = message;
+}
+
+function showError(id, message) {
+  const errEl = $(id + "Error");
+  if (errEl) {
+    errEl.textContent = message;
+    errEl.style.display = "block";
+  }
+  $(id).classList.add("invalid");
+}
+
+function clearErrors() {
+  document.querySelectorAll(".error").forEach(el => el.style.display = "none");
+  document.querySelectorAll(".invalid").forEach(el => el.classList.remove("invalid"));
+}
+
+/* =========================================================
+   Captcha
+   ========================================================= */
+let captchaValue = "";
+
+function generateCaptcha() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  captchaValue = "";
+  for (let i = 0; i < 6; i++) {
+    captchaValue += chars[Math.floor(Math.random() * chars.length)];
+  }
+  $("captchaCode").textContent = captchaValue;
+  fields.captchaInput.value = "";
+}
+
+$("refreshCaptcha").addEventListener("click", generateCaptcha);
+generateCaptcha();
+
+/* =========================================================
+   Customer name character counter
+   ========================================================= */
+function updateNameCounter() {
+  const max = fields.custName.maxLength;
+  $("custNameCounter").textContent = fields.custName.value.length + " / " + max;
+}
+fields.custName.addEventListener("input", updateNameCounter);
+
+/* =========================================================
+   Load customer data
+   ========================================================= */
+function populateForm(d) {
+  fields.custName.value = d.customerName || "";
+  fields.custemail.value = d.customerEmail || "";
+  fields.tin.value = d.tin || "";
+  fields.trn.value = d.trn || "";
+  fields.emirate.value = d.emirate || "";
+  fields.contactNumber.value = d.contactNumber || "";
+  fields.tradeLicenceNumber.value = d.tradeLicenceNumber || "";
+  fields.tradeAuthority.value = d.tradeAuthority || "";
+  fields.address1.value = d.address1 || "";
+  fields.address2.value = d.address2 || "";
+  fields.address3.value = d.address3 || "";
+  fields.freeZoneCustomer.checked = !!d.freeZoneCustomer;
+  updateNameCounter();
+}
+
+function showLoadError(reason) {
+  console.error("Customer lookup failed:", reason);
+  $("loadingScreen").style.display = "none";
+  $("formContainer").style.display = "none";
+  $("errorScreen").style.display = "block";
+}
+
+const ref = new URLSearchParams(location.search).get("ref");
+if (ref) fields.ReferenceCode.value = ref;
+
+fetch(LOOKUP_FLOW_URL, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ referenceCode: ref })
+})
+  .then(r => {
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  })
+  .then(data => {
+    // Only fetch/parse problems reach .catch below. Errors in the UI code
+    // are logged separately so they can't be mistaken for a load failure.
+    try {
+      populateForm(data);
+      $("loadingScreen").style.display = "none";
+      $("errorScreen").style.display = "none";
+      $("formContainer").style.display = "block";
+      //showStatus("Customer information loaded.", "ok");
+    } catch (uiError) {
+      console.error("Form display error:", uiError);
+    }
+  })
+  .catch(showLoadError);
+
+/* =========================================================
+   Validation
+   ========================================================= */
+function validateForm() {
+  let valid = true;
+
+  if (!/^\d{10}$/.test(fields.tin.value)) {
+    showError("tin", "TIN must contain exactly 10 digits");
+    valid = false;
+  }
+  if (!/^\d{15}$/.test(fields.trn.value)) {
+    showError("trn", "TRN must contain exactly 15 digits");
+    valid = false;
+  }
+  if (fields.tradeLicenceNumber.value && !fields.tradeAuthority.value) {
+    showError("tradeAuthority", "Authority required");
+    valid = false;
+  }
+  if (fields.captchaInput.value.toUpperCase() !== captchaValue) {
+    showError("captchaInput", "Captcha mismatch");
+    valid = false;
+  }
+  if (!fields.beneficiaryConfirmation.checked) {
+    showError("beneficiaryConfirmation", "Please confirm to continue");
+    valid = false;
+  }
+  return valid;
+}
+
+/* =========================================================
+   Submit
+   ========================================================= */
+$("customerForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  clearErrors();
+
+  if (!validateForm()) {
+    showStatus("Please correct highlighted fields.", "bad");
+    return;
+  }
+
+  const submitBtn = $("submitBtn");
+  submitBtn.disabled = true;
+  showStatus("Submitting information...", "info");
+
+  const payload = {
+    referenceCode: fields.ReferenceCode.value,
+    customerName: fields.custName.value,
+    customerEmail: fields.custemail.value,
+    contactNumber: fields.contactNumber.value,
+    tin: fields.tin.value,
+    trn: fields.trn.value,
+    tradeLicenceNumber: fields.tradeLicenceNumber.value,
+    tradeAuthority: fields.tradeAuthority.value,
+    freeZoneCustomer: fields.freeZoneCustomer.checked,
+    address1: fields.address1.value,
+    address2: fields.address2.value,
+    address3: fields.address3.value,
+    emirate: fields.emirate.value,
+    beneficiaryConfirmation: fields.beneficiaryConfirmation.checked,
+    submittedOn: new Date().toISOString()
+  };
+
+  try {
+    const response = await fetch(SUBMIT_FLOW_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    showStatus("Thank you. Information submitted successfully.", "ok");
+    generateCaptcha();
+  } catch (error) {
+    console.error("Submission failed:", error);
+    showStatus("Submission failed. Please try again.", "bad");
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
