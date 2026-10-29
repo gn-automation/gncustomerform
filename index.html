@@ -306,7 +306,7 @@ function populateForm(d) {
   fields.address1.value = d.address1 || "";
   fields.address2.value = d.address2 || "";
   fields.address3.value = d.address3 || "";
-  fields.freeZoneCustomer.checked = !!d.freeZoneCustomer;
+  fields.freeZoneCustomer.checked = String(d.freeZoneCustomer).trim().toLowerCase() === "true";
   updateNameCounter();
 }
 
