@@ -54,7 +54,7 @@
   .invalid { border-color: #dc3545; }
 
   /* ---------- Status banner ---------- */
-  .status { display: none; padding: 12px; border-radius: 4px; margin-bottom: 15px; }
+  .status { display: none; padding: 12px; border-radius: 4px; margin-top: 15px; }
   .status.ok   { background: #d1e7dd; }
   .status.bad  { background: #f8d7da; }
   .status.info { background: #e7f3ff; }
@@ -95,9 +95,6 @@
 
 <div class="form-container" id="formContainer">
   <h2>Gulf News e-Invoicing Information</h2>
-
-  <!-- NOTE: do not name this element id "status" - window.status is a built-in browser property -->
-  <div id="statusBox" class="status"></div>
 
   <form id="customerForm" novalidate>
 
@@ -207,7 +204,10 @@
     </div>
 
     <button id="submitBtn" type="submit">Submit</button>
-  </form>
+
+    <!-- NOTE: do not name this element id "status" - window.status is a built-in browser property -->
+    <div id="statusBox" class="status"></div>
+</form>
 </div>
 
 <script>
