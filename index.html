@@ -85,6 +85,19 @@
     justify-content: center;
   }
   #errorScreen { display: none; }
+
+  /* ---------- Success screen ---------- */
+  #successScreen {
+    display: none;
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .1);
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+    align-self: flex-start;
+  }
 </style>
 </head>
 
@@ -210,12 +223,17 @@
 </form>
 </div>
 
+<div id="successScreen">
+  <h2>Thank you</h2>
+  <p>Your information has been submitted successfully. You may now close this page.</p>
+</div>
+
 <script>
 /* =========================================================
    Configuration
    ========================================================= */
-const LOOKUP_FLOW_URL = "https://default2aff9a6f941d427ebc3e6b8404db8d.2d.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/29/workflows/4e8e1b92cf514852961ad5198594bfae/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=w0aeVQBZY4I_cF5R-YT5JAQen9_c7zNvoYNhlISiCiA";
-const SUBMIT_FLOW_URL = "https://default2aff9a6f941d427ebc3e6b8404db8d.2d.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/26/workflows/64cb3b7ca0e84c91be751ca176869c19/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H6YVvurcmnBRUPZi4Zy-DWBEZLQr8XobfeJcP_v6_zU";
+const LOOKUP_FLOW_URL = "https://default2aff9a6f941d427ebc3e6b8404db8d.2d.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/09/workflows/a448723f4f07452b9055b03178f53d77/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=WxMsQL0CS-PsHnl-7KBrPKzFHUiLidSJcYquHGScxyw";
+const SUBMIT_FLOW_URL = "https://default2aff9a6f941d427ebc3e6b8404db8d.2d.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/18/workflows/89466965e5e44017950e07fccc045ebd/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=jskyCq4ZCXh02tW0ZDmvE2Zft8JGi-n2Feuk0wyEes4";
 
 /* =========================================================
    Element references
@@ -295,6 +313,7 @@ fields.custName.addEventListener("input", updateNameCounter);
    Load customer data
    ========================================================= */
 function populateForm(d) {
+  fields.ReferenceCode.value = d.referenceCode || "";
   fields.custName.value = d.customerName || "";
   fields.custemail.value = d.customerEmail || "";
   fields.tin.value = d.tin || "";
@@ -314,19 +333,22 @@ function showLoadError(reason) {
   console.error("Customer lookup failed:", reason);
   $("loadingScreen").style.display = "none";
   $("formContainer").style.display = "none";
+  $("errorScreen").textContent = (reason && reason.status === 410)
+    ? "This link is invalid, has expired, or has already been used."
+    : "Unable to load customer information.";
   $("errorScreen").style.display = "block";
 }
 
-const ref = new URLSearchParams(location.search).get("ref");
-if (ref) fields.ReferenceCode.value = ref;
+// The link carries a single-use token (?ref=...), not the internal reference.
+const token = new URLSearchParams(location.search).get("ref");
 
 fetch(LOOKUP_FLOW_URL, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ referenceCode: ref })
+  body: JSON.stringify({ token })
 })
-  .then(r => {
-    if (!r.ok) throw new Error("HTTP " + r.status);
+  .then(async r => {
+    if (!r.ok) throw { status: r.status };
     return r.json();
   })
   .then(data => {
@@ -390,7 +412,7 @@ $("customerForm").addEventListener("submit", async event => {
   showStatus("Submitting information...", "info");
 
   const payload = {
-    referenceCode: fields.ReferenceCode.value,
+    token,
     customerName: fields.custName.value,
     customerEmail: fields.custemail.value,
     contactNumber: fields.contactNumber.value,
@@ -413,9 +435,13 @@ $("customerForm").addEventListener("submit", async event => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
+    if (response.status === 410) {
+      showStatus("This link has already been used or has expired.", "bad");
+      return;
+    }
     if (!response.ok) throw new Error("HTTP " + response.status);
-    showStatus("Thank you. Information submitted successfully.", "ok");
-    generateCaptcha();
+    $("formContainer").style.display = "none";
+    $("successScreen").style.display = "block";
   } catch (error) {
     console.error("Submission failed:", error);
     showStatus("Submission failed. Please try again.", "bad");
