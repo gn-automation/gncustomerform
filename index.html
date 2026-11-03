@@ -3,17 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<div class="logo">
-  <img src="https://assets.gulfnews.com/emailgnlogo.png" alt="Gulf News">
-</div>
-
 <title>Gulf News e-Invoicing Information</title>
 
 <style>
   /* ---------- Logo ---------- */
 .logo { text-align: center; margin-bottom: 16px; }
 .logo img { max-width: 200px; width: 100%; height: auto; }
-  
+
+.form-container h2 { text-align: center; }
   /* ---------- Base ---------- */
   body {
     font-family: Arial, sans-serif;
@@ -114,7 +111,12 @@
 <div id="loadingScreen">Loading customer information...</div>
 <div id="errorScreen">Unable to load customer information.</div>
 
-<div class="form-container" id="formContainer">
+<div class="form-container" id="formContainer"> 
+
+<div class="logo">
+<img src="https://assets.gulfnews.com/emailgnlogo.png" alt="Gulf News">
+</div>
+  
   <h2>Gulf News e-Invoicing Information</h2>
 
   <form id="customerForm" novalidate>
